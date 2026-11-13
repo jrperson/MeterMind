@@ -20,9 +20,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: espressif/idf:v5.5
+    container: espressif/idf:v5.5.4   # 5.5.2 or later: the WebSocket handshake callbacks
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build the firmware and assemble the flasher
         shell: bash
         run: |

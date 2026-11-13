@@ -1,6 +1,6 @@
 # MeterMind firmware (ESP32-S3)
 
-ESP-IDF 5.5 firmware for the MeterMind board (v0.1, ESP32-S3-MINI-1-N8). It is a
+ESP-IDF 5.5 firmware (5.5.2 or later; releases use 5.5.4) for the MeterMind board (v0.1, ESP32-S3-MINI-1-N8). It is a
 port of the Python prototype in `../bridge/` and serves the same API (`../API.md`) on port 80:
 REST, WebSocket `/ws`, MCP `/mcp`, the dashboard at `/`, and raw SCPI on 5025.
 

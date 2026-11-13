@@ -27,7 +27,7 @@ belongs to the new setting.
 Edge, connect the board's USB-C port to the computer, press **Install** and pick the board's
 serial port. The installer is built from `flasher/` by the release workflow.
 
-**From source** ([ESP-IDF 5.5](https://docs.espressif.com/projects/esp-idf/en/v5.5/esp32s3/)):
+**From source** ([ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v5.5.4/esp32s3/) 5.5.2 or later in the 5.5 series; releases are built with 5.5.4):
 
 ```sh
 . ~/esp/esp-idf-v5.5/export.sh
