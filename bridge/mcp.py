@@ -16,7 +16,8 @@ from .meter import FUNCTIONS, RATES, MeterError
 SUPPORTED_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"]
 
 INSTRUCTIONS = (
-    "Digcreat XDM1041 bench multimeter (5.5 digit) on the local network. Use `measure` for "
+    "OWON XDM1041 bench multimeter (5.5 digit; also sold rebadged, e.g. as the Digcreat "
+    "XDM1041-DG) on the local network. Use `measure` for "
     "almost everything: it configures the meter, waits until readings are valid, and returns "
     "stats. Values are SI units (V, A, ohm, F, Hz, s). New readings arrive about 1/s at rate "
     "slow, 1.5/s medium, 3/s fast; a function or range change takes about 3 s to settle. "

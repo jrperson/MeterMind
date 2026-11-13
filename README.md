@@ -7,19 +7,27 @@
 
 # MeterMind
 
-MeterMind puts a Digcreat XDM1041-DG bench multimeter (a rebadged OWON XDM1041) on your network.
-A small ESP32-S3 board plugs into the meter's rear USB port and serves:
+MeterMind lets an AI agent use a bench multimeter directly. It is made for the OWON XDM1041 (and
+has been tested on a rebadged version, the Digcreat XDM1041-DG). A small ESP32-S3 board plugs into
+the meter's rear USB port, joins your WiFi, and gives the meter an MCP server: an agent such as
+Claude Code can pick the function and range and take readings itself.
 
+**Why.** When an AI agent helps you debug or bring up a circuit, the meter is the missing link.
+The agent asks for a voltage, you read the display and type the number back. With MeterMind the
+agent measures for itself. Out of the box that is hard: the meter has to be cabled to a computer,
+and its USB interface has quirks that trip up anything driving it ([PROTOCOL.md](PROTOCOL.md)). Set
+commands are silent, commands sent while it is busy are dropped, and readings stay stale for a
+while after a mode change. MeterMind makes the meter wireless and hides those quirks behind a
+clean API. Every setting is read back to verify it, and a reading is only returned once it belongs
+to the new setting.
+
+The board serves:
+
+- **An MCP server** at `/mcp`, so AI agents can configure the meter and take measurements.
+- **An HTTP/JSON API and a WebSocket stream** ([API.md](API.md)). No client library needed.
 - **A dashboard** at `http://metermind.local/` that works like the meter's front panel: the same
   screen, keys, ranges and speeds, live readings, and the jacks the leads should be in.
-- **An HTTP/JSON API and a WebSocket stream** ([API.md](API.md)). No client library needed.
-- **An MCP server** at `/mcp`, so AI agents can configure the meter and take measurements.
 - **Raw SCPI on TCP port 5025** for lab software such as PyVISA.
-
-The meter's USB interface has quirks: set commands are silent, commands sent while it is busy are
-dropped, and readings stay stale for a while after a mode change ([PROTOCOL.md](PROTOCOL.md)). The
-bridge hides them. Every setting is read back to verify it, and a reading is only returned once it
-belongs to the new setting.
 
 ## Install the firmware
 

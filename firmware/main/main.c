@@ -1,5 +1,5 @@
-// MeterMind firmware (ESP32-S3-MINI-1 on the MeterMind board). Puts a Digcreat XDM1041
-// multimeter on the LAN: REST, WebSocket, MCP and raw SCPI, as specified in ../API.md. The
+// MeterMind firmware (ESP32-S3-MINI-1 on the MeterMind board). Puts an OWON XDM1041
+// multimeter (or a rebadged one) on the LAN: REST, WebSocket, MCP and raw SCPI, as specified in ../API.md. The
 // structure mirrors the Python prototype in ../bridge/ (meter.c = meter.py, bridge.c = api.py,
 // mcp.c = mcp.py, http.c + scpi_server.c = server.py).
 #include "board.h"
