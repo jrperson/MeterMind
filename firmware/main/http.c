@@ -357,26 +357,45 @@ static void ws_op(int fd, const char *text)
     ws_send_json(fd, reply);
 }
 
-// Runs before the upgrade: a cross-origin page never gets a socket.
+// A new WebSocket client: track it and queue its hello message.
+static void ws_opened(httpd_req_t *req)
+{
+    int fd = httpd_req_to_sockfd(req);
+    ws_add(fd);
+    xQueueSend(s_hello, &fd, 0);
+}
+
+// ESP-IDF 5.5.2 added a callback before the upgrade (a cross-origin page never gets a socket), and
+// later 5.5 builds one after it, which then replaces the handler call for the handshake. Without
+// them the handler is called once with HTTP_GET right after the upgrade (see ws_handler).
+#ifdef CONFIG_HTTPD_WS_PRE_HANDSHAKE_CB_SUPPORT
 static esp_err_t ws_pre_handshake(httpd_req_t *req)
 {
     if (origin_ok(req)) return ESP_OK;
     forbidden(req);
     return ESP_FAIL;
 }
+#endif
 
-// Runs after the upgrade (this ESP-IDF does not call the URI handler for the handshake).
+#ifdef CONFIG_HTTPD_WS_POST_HANDSHAKE_CB_SUPPORT
 static esp_err_t ws_post_handshake(httpd_req_t *req)
 {
-    int fd = httpd_req_to_sockfd(req);
-    ws_add(fd);
-    xQueueSend(s_hello, &fd, 0);
+    ws_opened(req);
     return ESP_OK;
 }
+#endif
 
-// Called for every data frame (PING, PONG and CLOSE are handled by the server).
+// Called for every data frame (PING, PONG and CLOSE are handled by the server), and on ESP-IDF
+// without the post-handshake callback once more with HTTP_GET when the upgrade is done.
 static esp_err_t ws_handler(httpd_req_t *req)
 {
+    if (req->method == HTTP_GET) {
+#ifndef CONFIG_HTTPD_WS_PRE_HANDSHAKE_CB_SUPPORT
+        if (!origin_ok(req)) return ESP_FAIL;  // closes the connection
+#endif
+        ws_opened(req);
+        return ESP_OK;
+    }
     int fd = httpd_req_to_sockfd(req);
     httpd_ws_frame_t f = {0};
     if (httpd_ws_recv_frame(req, &f, 0) != ESP_OK) return ESP_FAIL;
@@ -610,7 +629,13 @@ void http_start(void)
         {.uri = "/api/leads", .method = HTTP_GET, .handler = api_leads},
         {.uri = "/api/leads", .method = HTTP_PUT, .handler = api_leads},
         {.uri = "/ws", .method = HTTP_GET, .handler = ws_handler, .is_websocket = true,
-         .ws_pre_handshake_cb = ws_pre_handshake, .ws_post_handshake_cb = ws_post_handshake},
+#ifdef CONFIG_HTTPD_WS_PRE_HANDSHAKE_CB_SUPPORT
+         .ws_pre_handshake_cb = ws_pre_handshake,
+#endif
+#ifdef CONFIG_HTTPD_WS_POST_HANDSHAKE_CB_SUPPORT
+         .ws_post_handshake_cb = ws_post_handshake,
+#endif
+        },
         {.uri = "/mcp", .method = HTTP_POST, .handler = mcp_post_handler},
         {.uri = "/mcp", .method = HTTP_GET, .handler = mcp_not_allowed},
         {.uri = "/mcp", .method = HTTP_DELETE, .handler = mcp_not_allowed},

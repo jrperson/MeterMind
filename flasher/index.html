@@ -80,7 +80,8 @@
 
   <section class="card" aria-labelledby="h-cli">
     <h2 id="h-cli">Prefer the command line?</h2>
-    <p>Download the <a id="full" href="firmware/">complete image</a> and write it at offset 0 with esptool:</p>
+    <p>Download the <a id="full" href="firmware/">complete image</a> and write it at offset 0 with esptool.
+      Like <b>Erase device</b>, this also clears the saved WiFi network.</p>
     <pre id="cmd">esptool.py --chip esp32s3 write_flash 0x0 metermind-full.bin</pre>
   </section>
 
