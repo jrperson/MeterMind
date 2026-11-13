@@ -7,19 +7,25 @@
 
 # MeterMind
 
-MeterMind lets an AI agent use a bench multimeter directly. It is made for the OWON XDM1041 (and
-has been tested on a rebadged version, the Digcreat XDM1041-DG). A small ESP32-S3 board plugs into
-the meter's rear USB port, joins your WiFi, and gives the meter an MCP server: an agent such as
-Claude Code can pick the function and range and take readings itself.
+<p align="center">
+  <img src="docs/board.png" alt="3D render of the MeterMind board" width="560"><br>
+  <a href="board/">Order your own board</a> · <a href="https://jrperson.github.io/MeterMind/">Install the firmware</a>
+</p>
 
-**Why.** When an AI agent helps you debug or bring up a circuit, the meter is the missing link.
-The agent asks for a voltage, you read the display and type the number back. With MeterMind the
-agent measures for itself. Out of the box that is hard: the meter has to be cabled to a computer,
-and its USB interface has quirks that trip up anything driving it ([PROTOCOL.md](PROTOCOL.md)). Set
-commands are silent, commands sent while it is busy are dropped, and readings stay stale for a
-while after a mode change. MeterMind makes the meter wireless and hides those quirks behind a
-clean API. Every setting is read back to verify it, and a reading is only returned once it belongs
-to the new setting.
+MeterMind lets an AI agent use a bench multimeter more easily, and now wireless! It's made for the
+OWON XDM1041 (and tested on a rebadged one, the Digcreat XDM1041-DG). Plug the little MeterMind
+board into the back of the meter, put it on your WiFi, and your agent can set up the meter and take
+readings on its own.
+
+**Why I made it.** The meter's serial connection is full of gotchas: set commands never answer,
+commands sent while it's busy just vanish, and readings stay stale for a moment after you change
+modes ([PROTOCOL.md](PROTOCOL.md)). I had a protocol file that smoothed all of that out, and I had
+to add it to every project that used the meter. Now that work lives on the board, so every project
+gets the same clean, easy-to-use interface. No cable, no copied code.
+
+No board? You can still skip the gotchas: [PROTOCOL.md](PROTOCOL.md) documents every one, and the
+Python version in `bridge/` runs on your computer with the meter plugged in over USB, serving the
+same API ([below](#run-it-without-the-board)).
 
 The board serves:
 
@@ -100,6 +106,7 @@ and until it is set, current functions are refused. Rules: [API.md](API.md#get-a
 | `firmware/` | The ESP32-S3 firmware (ESP-IDF); see [firmware/README.md](firmware/README.md) |
 | `bridge/` | The Python prototype; `bridge/static/index.html` is the dashboard both serve |
 | `flasher/` | The web installer page (ESP Web Tools) |
+| `board/` | Order files for the board and how to order it |
 | `API.md` | The network API: REST, WebSocket, MCP, SCPI |
 | `PROTOCOL.md` | What was learned about the meter's USB and SCPI behaviour |
 | `tools/smoke_test.py` | End-to-end test against a real meter |
@@ -110,9 +117,12 @@ and until it is set, current functions are refused. Rules: [API.md](API.md#get-a
 The firmware runs on the MeterMind board: an ESP32-S3-MINI-1-N8, a USB-A socket that connects to
 the meter through a rigid USB-A-male to USB-B-male adapter, meter USB power through a 0.5 A
 current-limited switch, USB-C for 5 V power (1 A or more) and a CH340C serial console with
-auto-reset, an RGB status LED, and BOOT and RESET buttons. The board's design files are not part
-of this repository. The pin map is in `firmware/main/board.h`; other ESP32-S3 boards with a USB
-host port should run the firmware after adjusting it (untested).
+auto-reset, an RGB status LED, and BOOT and RESET buttons.
+
+It's open hardware: [`board/`](board/) has the gerbers, BOM, placement file and schematic, and a
+step-by-step guide to ordering it assembled from JLCPCB. The pin map is in
+`firmware/main/board.h`; other ESP32-S3 boards with a USB host port should run the firmware after
+adjusting it (untested).
 
 ## Run it without the board
 
@@ -156,6 +166,9 @@ blocks DNS-rebinding attacks. The WiFi setup network is open unless you set
 ## Licence
 
 Copyright (C) 2026 plasmata
+
+The board design in `board/` is open hardware under the CERN-OHL-S v2 ([board/LICENSE](board/LICENSE)).
+Everything else is software:
 
 MeterMind is free software: you can redistribute it and/or modify it under the terms of the GNU
 General Public License as published by the Free Software Foundation, either version 3 of the
