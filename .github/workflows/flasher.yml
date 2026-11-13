@@ -1,0 +1,48 @@
+# Builds the firmware and publishes the web flasher (flasher/) to GitHub Pages.
+# Runs on a version tag (v0.2.0, ...) or by hand from the Actions tab. One-time setup in the
+# repository: Settings > Pages > Source: GitHub Actions.
+name: Firmware and web flasher
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # attach the image to the release
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: espressif/idf:v5.5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the firmware and assemble the flasher
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh"
+          tools/build_flasher.sh
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: flasher
+      - name: Attach the complete image to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: flasher/firmware/metermind-*-full.bin
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

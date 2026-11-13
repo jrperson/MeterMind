@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MeterMind setup</title>
+<style>
+  :root { --bg:#14161a; --panel:#1d2026; --line:#2c3038; --text:#e6e8eb; --dim:#8a9099; --ok:#9fe6a0; --warn:#f2b45c; --bad:#ef6f6c; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 system-ui, sans-serif; background:var(--bg); color:var(--text); display:flex; justify-content:center; }
+  main { width:min(480px, 100%); padding:20px 16px 40px; }
+  h1 { font-size:17px; font-weight:600; margin:0 0 4px; }
+  .sub { color:var(--dim); font-size:13px; margin-bottom:16px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; margin-bottom:14px; }
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; color:var(--dim); font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
+  ul { list-style:none; margin:0; padding:0; max-height:280px; overflow:auto; }
+  li { display:flex; justify-content:space-between; gap:8px; padding:10px 8px; border-radius:6px; cursor:pointer; }
+  li:hover, li.sel { background:#262a31; }
+  li.sel { outline:1px solid var(--ok); }
+  .ssid { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .meta { color:var(--dim); font-size:12px; white-space:nowrap; }
+  label { display:block; font-size:12px; color:var(--dim); margin:10px 0 4px; }
+  input[type=text], input[type=password] { width:100%; background:#0c0e10; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:10px; font:inherit; }
+  .show { display:flex; gap:6px; align-items:center; font-size:13px; color:var(--dim); margin-top:6px; }
+  button { background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:10px 14px; font:inherit; cursor:pointer; }
+  button.primary { width:100%; margin-top:14px; border-color:var(--ok); color:var(--ok); }
+  button.small { padding:4px 10px; font-size:12px; }
+  button:disabled { opacity:.5; cursor:wait; }
+  #result { min-height:1.4em; }
+  .ok { color:var(--ok); } .warn { color:var(--warn); } .bad { color:var(--bad); } .dim { color:var(--dim); }
+  a { color:var(--ok); }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>MeterMind setup</h1>
+  <div class="sub" id="sub">Choose the WiFi network MeterMind should join.</div>
+
+  <div class="card" id="off" hidden>
+    <p>Setup mode is off. To change the network, hold the board's <b>BOOT</b> button for 3 seconds
+      (the LED blinks blue), join the WiFi network <b id="apname">MeterMind</b> and reload this page.</p>
+    <p class="dim" id="offstatus"></p>
+  </div>
+
+  <div id="on" hidden>
+    <div class="card">
+      <div class="head"><span>Networks</span><button class="small" id="rescan">Rescan</button></div>
+      <ul id="nets"></ul>
+      <div class="dim" id="scanmsg">Scanning...</div>
+    </div>
+
+    <div class="card">
+      <label for="ssid">Network name</label>
+      <input type="text" id="ssid" maxlength="32" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <label for="pass">Password</label>
+      <input type="password" id="pass" maxlength="63" autocomplete="off">
+      <div class="show"><input type="checkbox" id="showpw"><label for="showpw" style="margin:0">Show password</label></div>
+      <button class="primary" id="join">Join network</button>
+    </div>
+
+    <div class="card" id="resultcard" hidden>
+      <div id="result"></div>
+      <button class="primary" id="finish" hidden>Finish</button>
+    </div>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let polling = false, lost = 0, chosenOpen = false, joined = false;
+
+async function api(path, opts) {
+  const r = await fetch(path, Object.assign({cache: "no-store"}, opts));
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.message || r.statusText);
+  return j;
+}
+
+function bars(rssi) { return rssi >= -55 ? "▂▄▆█" : rssi >= -67 ? "▂▄▆" : rssi >= -78 ? "▂▄" : "▂"; }
+
+function showNets(list) {
+  const ul = $("nets");
+  ul.textContent = "";
+  for (const n of list) {
+    const li = document.createElement("li");
+    const a = document.createElement("span"); a.className = "ssid"; a.textContent = n.ssid;
+    const b = document.createElement("span"); b.className = "meta"; b.textContent = (n.secure ? "🔒 " : "") + bars(n.rssi);
+    li.append(a, b);
+    if (n.ssid === $("ssid").value) li.classList.add("sel");
+    li.onclick = () => {
+      $("ssid").value = n.ssid;
+      chosenOpen = !n.secure;
+      $("pass").value = "";
+      $("pass").disabled = chosenOpen;
+      $("pass").placeholder = chosenOpen ? "open network: no password" : "";
+      for (const x of ul.children) x.classList.toggle("sel", x === li);
+      if (!chosenOpen) $("pass").focus();
+    };
+    ul.append(li);
+  }
+}
+
+async function scan(refresh) {
+  $("scanmsg").textContent = "Scanning...";
+  $("scanmsg").hidden = false;
+  try {
+    let j = await api("/api/wifi/scan" + (refresh ? "?refresh=1" : ""));
+    for (let i = 0; j.scanning && i < 20; i++) {
+      await new Promise(r => setTimeout(r, 700));
+      j = await api("/api/wifi/scan");
+    }
+    showNets(j.networks);
+    $("scanmsg").textContent = j.networks.length ? "" : "No networks found. 5 GHz-only networks are not supported.";
+    $("scanmsg").hidden = !!j.networks.length;
+  } catch (e) {
+    $("scanmsg").textContent = "Scan failed: " + e.message;
+  }
+}
+
+function result(html, cls) {
+  $("resultcard").hidden = false;
+  $("result").className = cls || "";
+  $("result").replaceChildren(...html);
+}
+
+function el(tag, text, attrs) {
+  const e = document.createElement(tag);
+  if (text) e.textContent = text;
+  Object.assign(e, attrs || {});
+  return e;
+}
+
+function render(s) {
+  $("apname").textContent = s.ap_ssid;
+  if (!s.setup) {
+    $("on").hidden = true; $("off").hidden = false;
+    $("offstatus").textContent = s.state === "up" ? `Connected to "${s.ssid}" as ${s.ip}.` :
+      s.state === "connecting" ? `Connecting to "${s.ssid}"...` : "Not connected.";
+    return;
+  }
+  $("off").hidden = true; $("on").hidden = false;
+  $("sub").textContent = s.configured && s.state !== "up" && !s.attempt
+    ? `Currently saved: "${s.ssid}". Choose a network to replace it, or press Finish to keep it.`
+    : "Choose the WiFi network MeterMind should join.";
+  $("finish").hidden = !s.configured;
+  const a = s.attempt;
+  if (!a) {
+    if (s.configured) result([el("span", "Finish closes the setup network and rejoins the saved one.")], "dim");
+    return;
+  }
+  if (a.state === "trying") {
+    result([el("span", `Joining "${a.ssid}"...`)], "warn");
+  } else if (a.state === "ok") {
+    const url = `http://${s.hostname}/`;
+    const nodes = [el("div", `Joined "${a.ssid}" as ${s.ip}. Saved.`),
+      el("p", "Switch this phone or computer back to that network, then open:"),
+      el("a", url, {href: url}), el("span", "  or  "), el("a", `http://${s.ip}/`, {href: `http://${s.ip}/`})];
+    if (s.close_in_s != null) nodes.push(el("p", `This setup network closes in ${s.close_in_s} s.`, {className: "dim"}));
+    result(nodes, "ok");
+  } else {
+    result([el("span", `Could not join "${a.ssid}": ${a.message || "unknown error"}.`)], "bad");
+  }
+}
+
+async function refresh() {
+  try {
+    const s = await api("/api/wifi");
+    lost = 0;
+    joined = !!(s.attempt && s.attempt.state === "ok");
+    render(s);
+    return s;
+  } catch (e) {
+    lost++;
+    if (joined) return {gone: true};  // the setup network closed after a success: keep the result shown
+    if (lost > 2) result([el("span", "Lost contact with MeterMind. It may be changing channel to join your network; " +
+      "rejoin the MeterMind network if this phone left it. Retrying...")], "warn");
+    return null;
+  }
+}
+
+async function poll() {
+  if (polling) return;
+  polling = true;
+  for (;;) {
+    const s = await refresh();
+    await new Promise(r => setTimeout(r, 1000));
+    if (s && s.gone) break;
+    if (s && (!s.setup || (s.attempt && s.attempt.state === "failed"))) break;
+    if (s && !s.attempt && !s.configured) break;
+  }
+  polling = false;
+  $("join").disabled = false;
+}
+
+$("showpw").onchange = () => { $("pass").type = $("showpw").checked ? "text" : "password"; };
+$("ssid").oninput = () => { chosenOpen = false; $("pass").disabled = false; $("pass").placeholder = ""; };
+$("rescan").onclick = () => scan(true);
+$("join").onclick = async () => {
+  const ssid = $("ssid").value;
+  const password = $("pass").disabled ? "" : $("pass").value;
+  if (!ssid) { result([el("span", "Choose or type a network name.")], "bad"); return; }
+  if (password && password.length < 8) { result([el("span", "A WPA password has at least 8 characters.")], "bad"); return; }
+  $("join").disabled = true;
+  try {
+    await api("/api/wifi", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ssid, password})});
+    result([el("span", `Joining "${ssid}"...`)], "warn");
+    poll();
+  } catch (e) {
+    result([el("span", e.message)], "bad");
+    $("join").disabled = false;
+  }
+};
+$("finish").onclick = async () => {
+  $("finish").disabled = true;
+  try {
+    await api("/api/wifi/done", {method: "POST"});
+    result([el("span", "Setup network closed. MeterMind is on your network now; you can leave this page.")], "ok");
+    $("finish").hidden = true;
+  } catch (e) {
+    result([el("span", e.message)], "bad");
+    $("finish").disabled = false;
+  }
+};
+
+refresh().then(s => {
+  if (s && s.setup) {
+    scan(false).then(() => { if (!$("nets").children.length) scan(true); });
+    if (s.attempt && s.attempt.state !== "failed") poll();
+  }
+});
+</script>
+</body>
+</html>

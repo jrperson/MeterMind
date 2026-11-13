@@ -1,0 +1,43 @@
+menu "MeterMind"
+
+    config BRIDGE_HOSTNAME
+        string "Host name (mDNS: <name>.local)"
+        default "metermind"
+
+    config BRIDGE_WIFI_SSID
+        string "Fallback WiFi SSID"
+        default ""
+        help
+            Used only when no WiFi settings are stored in NVS. Prefer the setup network (or the
+            serial console's `wifi` command): anything set here ends up in sdkconfig and the
+            firmware image.
+
+    config BRIDGE_WIFI_PASSWORD
+        string "Fallback WiFi password"
+        default ""
+
+    config BRIDGE_SETUP_PASSWORD
+        string "Setup network password (empty: open)"
+        default ""
+        help
+            The setup access point (MeterMind-XXXX) is open by default: it only runs while no
+            network is saved or after BOOT is held. 8 to 63 characters make it WPA2; shorter
+            values are ignored.
+
+    config BRIDGE_SETUP_TIMEOUT_MIN
+        int "Close an unused setup network after (minutes)"
+        default 10
+        range 1 120
+        help
+            Only when a network is saved: with nobody joined for this long, the setup network
+            closes and the board rejoins the saved network. Without a saved network it stays up.
+
+    config BRIDGE_HTTP_PORT
+        int "HTTP port (REST, WebSocket, MCP, dashboard)"
+        default 80
+
+    config BRIDGE_SCPI_PORT
+        int "Raw SCPI TCP port (0 disables)"
+        default 5025
+
+endmenu
