@@ -1,7 +1,7 @@
 # The MeterMind board
 
 <p align="center">
-  <img src="../docs/board.png" alt="3D render of the MeterMind board" width="560">
+  <img src="../docs/board.png" alt="3D render of the MeterMind board" width="420">
 </p>
 
 Everything you need to order your own MeterMind board, assembled. These are the exact files the

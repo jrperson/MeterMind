@@ -8,7 +8,7 @@
 # MeterMind
 
 <p align="center">
-  <img src="docs/board.png" alt="3D render of the MeterMind board" width="560"><br>
+  <img src="docs/board.png" alt="3D render of the MeterMind board" width="360"><br>
   <a href="board/">Order your own board</a> · <a href="https://jrperson.github.io/MeterMind/">Install the firmware</a>
 </p>
 
