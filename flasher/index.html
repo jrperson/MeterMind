@@ -26,9 +26,7 @@
   h1 { margin:8px 0 0; font-size:28px; line-height:1.2; }
   h2 { margin:0 0 10px; font-size:18px; }
   .lead { margin:0; color:var(--soft); }
-  /* the board is matte black like the page: a soft lighter glow keeps its outline readable */
-  .board { display:block; width:100%; max-width:340px; height:auto; margin:8px auto 0;
-           background:radial-gradient(closest-side, #2b3139 0%, #1a1e23 55%, transparent 100%); }
+  .board { display:block; width:100%; max-width:480px; height:auto; margin:8px auto 0; border-radius:12px; }
   .card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px; }
   ol { margin:0 0 18px; padding-left:22px; } li { margin:6px 0; } li::marker { color:var(--amber); font-weight:600; }
   p { margin:8px 0; }
@@ -54,7 +52,7 @@
       for AI agents, a REST and WebSocket API, a dashboard that works like the meter's front panel,
       and raw SCPI.
       <span id="ver"></span></p>
-    <img class="board" src="board.png" width="800" height="607" alt="3D render of the MeterMind board">
+    <img class="board" src="meter-and-boards.jpg" width="1200" height="752" alt="Five MeterMind boards in front of a Digcreat XDM1041-DG; the connected one's status LED is green">
   </header>
 
   <section class="card" aria-labelledby="h-install">

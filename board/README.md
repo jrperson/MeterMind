@@ -1,7 +1,7 @@
 # The MeterMind board
 
 <p align="center">
-  <img src="../docs/board.png" alt="3D render of the MeterMind board" width="420">
+  <img src="../docs/meter-and-boards.jpg" alt="Five MeterMind boards in front of a Digcreat XDM1041-DG; the connected one's status LED is green" width="480">
 </p>
 
 Everything you need to order your own MeterMind board, assembled. These are the exact files the
@@ -53,10 +53,6 @@ follow the [setup steps](../README.md#connect-it-to-wifi).
 - The design is meant for the OWON XDM1041 and tested on the rebadged Digcreat XDM1041-DG.
 
 ## Licence
-
-<p align="center">
-  <img src="../docs/board-back.png" alt="The back of the board: the MeterMind logo, made by plasmata, v0.1" width="240">
-</p>
 
 Copyright (C) 2026 plasmata
 

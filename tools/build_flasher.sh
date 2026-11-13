@@ -8,7 +8,7 @@
 #   flasher/manifest.json                       ESP Web Tools manifest (version from the app)
 #   flasher/firmware/*.bin                      bootloader, partition table, OTA data, app
 #   flasher/firmware/metermind-<ver>-full.bin   one merged image for esptool (write at 0x0)
-#   flasher/board.png                           the board render, from docs/
+#   flasher/meter-and-boards.jpg                the photo, from docs/
 set -e
 cd "$(dirname "$0")/.."
 ROOT=$(pwd)
@@ -44,6 +44,6 @@ open(os.path.join(build, "version.txt"), "w").write(version)
 print(f"MeterMind {version}: " + ", ".join(f"{p['path']} @ {p['offset']:#x}" for p in parts))
 PY
 VER=$(cat "$B/version.txt")
-cp "$ROOT/docs/board.png" "$ROOT/flasher/board.png"
+cp "$ROOT/docs/meter-and-boards.jpg" "$ROOT/flasher/"
 (cd "$B" && python -m esptool --chip esp32s3 merge_bin -o "$OUT/metermind-$VER-full.bin" @flash_args)
 ls -l "$OUT"
