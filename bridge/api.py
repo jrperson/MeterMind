@@ -15,7 +15,7 @@ from typing import Any
 from .meter import (FUNCTIONS, RANGES, RATES, SETTLE_MAX_S, UPDATE_INTERVAL_S, Meter, MeterError,
                     select_range)
 
-BRIDGE_VERSION = "0.2.0"
+BRIDGE_VERSION = "0.2.1"
 MAX_SAMPLES = 100
 WAIT_EXTEND_MAX_S = 12.0  # how far a settle can push a reading wait past its deadline
 HTTP_STATUS = {

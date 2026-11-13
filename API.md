@@ -32,7 +32,7 @@ Raw SCPI is on 5025 in both. Implemented in `bridge/` (prototype) and `firmware/
 
 ### `GET /api/info`
 ```json
-{"model":"XDM1041 -DG","serial":"12345678","meter_fw":"V4.4.0","bridge_fw":"0.2.0",
+{"model":"XDM1041 -DG","serial":"12345678","meter_fw":"V4.4.0","bridge_fw":"0.2.1",
  "connected":true,"uptime_s":5123}
 ```
 The ESP32 firmware adds `"meter_vbus_fault": false` (the meter's 0.5 A USB power switch has tripped).

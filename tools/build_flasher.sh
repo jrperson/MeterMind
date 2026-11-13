@@ -14,6 +14,7 @@ cd "$(dirname "$0")/.."
 ROOT=$(pwd)
 B="$ROOT/firmware/build-release"
 
+rm -f "$B/sdkconfig"   # regenerate from sdkconfig.defaults every time (a stale one keeps old values)
 idf.py -C firmware -B "$B" -D SDKCONFIG="$B/sdkconfig" build
 
 OUT="$ROOT/flasher/firmware"
