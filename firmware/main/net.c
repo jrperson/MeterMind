@@ -105,6 +105,11 @@ static void sta_connect(const wifi_config_t *cfg)
     wifi_config_t wc = *cfg;
     wc.sta.threshold.authmode = wc.sta.password[0] ? WIFI_AUTH_WPA_PSK : WIFI_AUTH_OPEN;
     wc.sta.pmf_cfg.capable = true;
+    // Scan every channel and join the strongest access point with this name. The driver's default
+    // (fast scan) joins the first one it hears, and in a house with several access points that can
+    // be a far one (seen: -80 dBm from a far AP with another at -35 dBm on the same channel).
+    wc.sta.scan_method = WIFI_ALL_CHANNEL_SCAN;
+    wc.sta.sort_method = WIFI_CONNECT_AP_BY_SIGNAL;
     esp_wifi_set_config(WIFI_IF_STA, &wc);
     LOCK();
     s_st.state = NET_CONNECTING;
